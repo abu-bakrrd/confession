@@ -1,0 +1,62 @@
+{
+  "fe0dfc2f-1576-48c8-9cf6-24193181c805": {
+    "text": "первый пост",
+    "from": "5644397480",
+    "number": 96,
+    "channel_message_id": 183
+  },
+  "ce38b682-5281-4a92-ba14-02fcbc9a20fd": {
+    "text": "третий пост",
+    "from": "5644397480",
+    "number": 98,
+    "channel_message_id": 186
+  },
+  "747f7830-e3ca-4815-a37a-93fc05f24b05": {
+    "text": "ответ на первый пост-фото",
+    "from": "5644397480",
+    "number": 102,
+    "channel_message_id": 193
+  },
+  "81857f59-88fe-42e5-9120-8873a10d8139": {
+    "text": "бла бла",
+    "from": "5644397480",
+    "number": 103,
+    "channel_message_id": 194
+  },
+  "87de0cfd-e8dd-478e-be9a-f8f547ad86f3": {
+    "text": "теперь могу писать посты",
+    "from": "5644397480",
+    "number": 104,
+    "channel_message_id": 199
+  },
+  "a83cb03a-9b1e-4b34-adfa-330feab69cfa": {
+    "text": "теперь сообщения начинаются с нуля",
+    "from": "5644397480",
+    "number": 1,
+    "channel_message_id": 200
+  },
+  "24edb78b-a0a3-4b30-b3f1-edf267edeac7": {
+    "text": ",kf ,kf",
+    "from": "5644397480",
+    "number": 4,
+    "channel_message_id": 204
+  },
+  "389345bf-0ef9-421f-ae74-37a36cf4ca94": {
+    "text": "fds",
+    "from": "5644397480",
+    "number": 5,
+    "channel_message_id": 205
+  },
+  "2b8b04f4-38db-4a54-a24a-444e2bd7c25b": {
+    "text": "fds",
+    "from": "5644397480",
+    "number": 4,
+    "channel_message_id": 206
+  },
+  "cfefac21-b2b0-40d8-8d6e-4085de277c3f": {
+    "text": "авы",
+    "from": "5644397480",
+    "number": 6,
+    "channel_message_id": 209
+  }
+}
