@@ -6,12 +6,7 @@ import json
 import os
 from flask import Flask
 from threading import Thread
-import psycopg2
 
-DATABASE_URL = os.environ.get("postgresql://confession_z83d_user:tgTlgjBL17dPr3wlIB1vlSjshYqbcue6@dpg-d05p6kili9vc7391ppq0-a/confession_z83d")  # Или вставь строку подключения напрямую
-
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-cursor = conn.cursor()
 
 app = Flask('')
 
