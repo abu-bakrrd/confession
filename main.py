@@ -232,6 +232,8 @@ def cmd_start(m):
 
             bot.send_message(m.chat.id, "❗️ Оригинал не найден.")
         return
+    else:
+        bot.send_message(m.chat.id, '👋 Привет! Добро пожаловать в анонимный\nбот!\n\nЗдесь ты можешь: 📝 Отправлять анонимные посты\n💬 Отвечать на чужие посты\n📷 Делиться фото и видео\n👀 Все проходит модерацию перед публикацией\n\nЧтобы начать просто отправь сообщение, фото или видео — и жди модерации!\n\n🚫 Не забывай: спам, оскорбления и нарушения правил — повод для блокировки.\n\nГотов? Тогда начинай!')
 
     # if uid not in users:
     #     bot.send_message(m.chat.id, "👋 Привет! Введите своё имя:")
@@ -372,8 +374,6 @@ def all_text(m):
     markup.row(
         InlineKeyboardButton(
             "🚫 Заблокировать", callback_data=f"block_user_post:{post_id}"),
-        InlineKeyboardButton(
-            "⚠️ Убрать имя", callback_data=f"remove_name_post:{post_id}")
     )
     bot.send_message(
         MODERATION_GROUP_ID,
@@ -418,16 +418,15 @@ def handle_media(m: Message):
     author_mention = f'<a href="tg://user?id={u.id}">{u.first_name}</a>'
     markup = InlineKeyboardMarkup()
     markup.row(
-        InlineKeyboardButton("✅ Одобрить медиа",
+        InlineKeyboardButton("✅ Одобрить",
                              callback_data=f"approve_media:{media_id}"),
-        InlineKeyboardButton("❌ Отклонить медиа",
+        InlineKeyboardButton("❌ Отклонить",
                              callback_data=f"reject_media:{media_id}")
     )
     markup.row(
         InlineKeyboardButton(
             "🚫 Заблокировать", callback_data=f"block_user_media:{media_id}"),
-        InlineKeyboardButton(
-            "⚠️ Убрать имя", callback_data=f"remove_name_media:{media_id}")
+
     )
 
     # Отправляем превью в группу модерации
@@ -540,17 +539,17 @@ def on_moderate(c):
             blocked_users[u_id] = True
             save_blocked()
             status = f"🚫 Заблокирован: {mod_mention}"
-        elif action == 'remove_name_reply':
-            bot.send_message(
-                CHANNEL_ID,
-                f"№{load_counter()+1:06}:\n{data['text']}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{orig}\">Ответить</a>",
-                parse_mode='HTML',
-                disable_web_page_preview=True,
-                reply_to_message_id=entry['channel_message_id']
-            )
-            num = load_counter() + 1
-            save_counter(num)
-            status = f"⚠️ Опубликован без имени: {mod_mention}"
+        # elif action == 'remove_name_reply':
+        #     bot.send_message(
+        #         CHANNEL_ID,
+        #         f"№{load_counter()+1:06}:\n{data['text']}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{orig}\">Ответить</a>",
+        #         parse_mode='HTML',
+        #         disable_web_page_preview=True,
+        #         reply_to_message_id=entry['channel_message_id']
+        #     )
+        #     num = load_counter() + 1
+        #     save_counter(num)
+        #     status = f"⚠️ Опубликован без имени: {mod_mention}"
         elif action == 'approve_reply':
             bot.send_message(
                 CHANNEL_ID,
@@ -594,18 +593,18 @@ def on_moderate(c):
         blocked_users[u_id] = True
         save_blocked()
         status = f"🚫 Заблокирован: {mod_mention}"
-    elif action == 'remove_name_media':
-        caption = f"№{load_counter()+1:06}\n{cap}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>"
-        if ctype == 'photo':
-            bot.send_photo(CHANNEL_ID, file_id,
-                           caption=caption, parse_mode='HTML')
-        else:
-            bot.send_video(CHANNEL_ID, file_id,
-                           caption=caption, parse_mode='HTML')
-        num = load_counter() + 1
-        save_counter(num)
-        status = f"⚠️ Опубликовано без имени: {mod_mention}"
-        save_media_json(c.message, item, u_id, cap, load_counter(), ctype)
+    # elif action == 'remove_name_media':
+    #     caption = f"№{load_counter()+1:06}\n{cap}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>"
+    #     if ctype == 'photo':
+    #         bot.send_photo(CHANNEL_ID, file_id,
+    #                        caption=caption, parse_mode='HTML')
+    #     else:
+    #         bot.send_video(CHANNEL_ID, file_id,
+    #                        caption=caption, parse_mode='HTML')
+    #     num = load_counter() + 1
+    #     save_counter(num)
+    #     status = f"⚠️ Опубликовано без имени: {mod_mention}"
+    #     save_media_json(c.message, item, u_id, cap, load_counter(), ctype)
     elif action == 'approve_media':
         caption = f"№{load_counter()+1:06}\n{cap}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>"
         if ctype == 'photo':
