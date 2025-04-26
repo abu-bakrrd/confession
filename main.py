@@ -195,13 +195,14 @@ def cmd_start(m):
                     # with open(f'{entry2["file_id"]}.jpg', 'wb') as f:
                     #     f.write(downloaded_file)
 
-                    print(
-                        f"Фото успешно загружено с file_id {entry2['file_id']}.")
+                    # print(
+                    #     f"Фото успешно загружено с file_id {entry2['file_id']}.")
                     bot.send_photo(entry2['user_id'],
                                    entry2['file_id'], caption=f"{entry2['cap']}\n\n💬Вы отвечаете на пост под номером №{entry2['number']:06}.\n\nНапишите сам ответ:")
 
                 except Exception as e:
-                    print(f"Ошибка при получении фото: {e}")
+                    # print(f"Ошибка при получении фото: {e}")
+                    pass
             else:
                 try:
                     # Получаем файл по file_id
@@ -216,8 +217,8 @@ def cmd_start(m):
                     # with open(f'{entry2["file_id"]}.mp4', 'wb') as f:
                     #     f.write(downloaded_file)
 
-                    print(
-                        f"Видео успешно загружено с file_id {entry2['file_id']}.")
+                    # print(
+                    #     f"Видео успешно загружено с file_id {entry2['file_id']}.")
 
                     bot.send_video(
                         entry2['user_id'],
@@ -230,8 +231,9 @@ def cmd_start(m):
                     )
 
                 except Exception as e:
-                    print(f"Ошибка при получении видео: {e}")
-
+                    # print(f"Ошибка при получении видео: {e}")
+                    pass
+            user_reply_flow[uid] = orig
         else:
 
             bot.send_message(m.chat.id, "❗️ Оригинал не найден.")
@@ -301,13 +303,13 @@ def cmd_block(m):
 #     bot.send_message(m.chat.id, "✏️ Введите новое имя:")
 
 
-@bot.message_handler(commands=['counter'])
+@bot.message_handler(commands=['count'])
 @safe_handler
 def cmd_counter(m):
     bot.send_message(m.chat.id, f"📊 Всего публикаций: {load_counter():06}")
 
 
-@bot.message_handler(commands=['set_counter'])
+@bot.message_handler(commands=['set_count'])
 @safe_handler
 def cmd_reset(m):
     if m.from_user.id != OWNER_ID:
