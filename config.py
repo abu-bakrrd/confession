@@ -1,7 +1,7 @@
 BOT_TOKEN = '7792501656:AAGjFpSD8xHika1x0IWAGOLIxvN7bbN8wKw'
-CHANNEL_ID = '@hjkhkjhasfj'
+CHANNEL_ID = '@conversation242'
 OWNER_ID = 5644397480  
 ADMINS = [5644397480]  
-MODERATION_GROUP_ID = -4647383737 # заменишь на реальный chat_id группы
+MODERATION_GROUP_ID = -1002603536495  # заменишь на реальный chat_id группы
 ARCHIVE = -4735549015
 
