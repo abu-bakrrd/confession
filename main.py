@@ -1,4 +1,3 @@
-import logging
 from config import BOT_TOKEN, CHANNEL_ID, ADMINS, OWNER_ID, MODERATION_GROUP_ID
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 import telebot
@@ -28,12 +27,12 @@ def keep_alive():
 
 keep_alive()
 
+import logging
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)s %(name)s %(message)s',
     level=logging.INFO
 )
-
 
 def safe_handler(func):
     def wrapper(*args, **kwargs):
@@ -43,7 +42,6 @@ def safe_handler(func):
             logging.exception(f"Error in handler {func.__name__}")
             # здесь можно уведомить администратора или просто проигнорировать
     return wrapper
-
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
@@ -64,7 +62,6 @@ PENDING_MEDIA = os.path.join(BASE_DIR, 'media.json')
 def save_json(path, data):
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-
 
 @bot.message_handler(commands=['user'])
 def handle_user_command(message):
@@ -91,8 +88,7 @@ def handle_user_command(message):
 
     except Exception as e:
         bot.reply_to(message, f"Ошибка: {e}")
-
-
+        
 def save_media_json(message, item, user_id, cap, n, type):
     file_id = None
     if type == 'photo':
@@ -195,14 +191,13 @@ def cmd_start(m):
                     # with open(f'{entry2["file_id"]}.jpg', 'wb') as f:
                     #     f.write(downloaded_file)
 
-                    # print(
-                    #     f"Фото успешно загружено с file_id {entry2['file_id']}.")
+                    print(
+                        f"Фото успешно загружено с file_id {entry2['file_id']}.")
                     bot.send_photo(entry2['user_id'],
                                    entry2['file_id'], caption=f"{entry2['cap']}\n\n💬Вы отвечаете на пост под номером №{entry2['number']:06}.\n\nНапишите сам ответ:")
 
                 except Exception as e:
-                    # print(f"Ошибка при получении фото: {e}")
-                    pass
+                    print(f"Ошибка при получении фото: {e}")
             else:
                 try:
                     # Получаем файл по file_id
@@ -217,8 +212,8 @@ def cmd_start(m):
                     # with open(f'{entry2["file_id"]}.mp4', 'wb') as f:
                     #     f.write(downloaded_file)
 
-                    # print(
-                    #     f"Видео успешно загружено с file_id {entry2['file_id']}.")
+                    print(
+                        f"Видео успешно загружено с file_id {entry2['file_id']}.")
 
                     bot.send_video(
                         entry2['user_id'],
@@ -231,15 +226,14 @@ def cmd_start(m):
                     )
 
                 except Exception as e:
-                    # print(f"Ошибка при получении видео: {e}")
-                    pass
-            user_reply_flow[uid] = orig
+                    print(f"Ошибка при получении видео: {e}")
+
         else:
 
             bot.send_message(m.chat.id, "❗️ Оригинал не найден.")
         return
     else:
-        bot.send_message(m.chat.id, '👋 Привет! Добро пожаловать в анонимный\nбот!\n\nЗдесь ты можешь:\n 📝 Отправлять анонимные посты\n💬 Отвечать на чужие посты\n📷 Делиться фото и видео\n👀 Все проходит модерацию перед публикацией\n\nЧтобы начать просто отправь сообщение, фото или видео — и жди модерации!\n\n🚫 Не забывай: спам, оскорбления и нарушения правил — повод для блокировки.\n\nГотов? Тогда начинай!')
+        bot.send_message(m.chat.id, '👋 Привет! Добро пожаловать в анонимный\nбот!\n\nЗдесь ты можешь: 📝 Отправлять анонимные посты\n💬 Отвечать на чужие посты\n📷 Делиться фото и видео\n👀 Все проходит модерацию перед публикацией\n\nЧтобы начать просто отправь сообщение, фото или видео — и жди модерации!\n\n🚫 Не забывай: спам, оскорбления и нарушения правил — повод для блокировки.\n\nГотов? Тогда начинай!')
 
     # if uid not in users:
     #     bot.send_message(m.chat.id, "👋 Привет! Введите своё имя:")
@@ -275,26 +269,6 @@ def cmd_unblock(m):
         bot.reply_to(m, "⚠️ Этот пользователь не был заблокирован.")
 
 
-@bot.message_handler(commands=['block'])
-@safe_handler
-def cmd_block(m):
-    if not is_admin(m.from_user.id):
-        return bot.reply_to(m, "❌ Только админ.")
-    parts = m.text.split()
-    if len(parts) != 2:
-        return bot.reply_to(m, "Использование: /block <user_id>")
-    try:
-        uid = int(parts[1])
-    except ValueError:
-        return bot.reply_to(m, "⚠️ Неверный формат ID.")
-
-    if uid in blocked_users:
-        bot.reply_to(m, "⚠️ Пользователь уже заблокирован.")
-    else:
-        blocked_users[uid] = True
-        save_blocked()
-        bot.reply_to(m, f"⛔ Пользователь {uid} заблокирован.")
-
 # @bot.message_handler(commands=['name'])
 # @safe_handler
 # def cmd_name(m):
@@ -303,13 +277,13 @@ def cmd_block(m):
 #     bot.send_message(m.chat.id, "✏️ Введите новое имя:")
 
 
-@bot.message_handler(commands=['count'])
+@bot.message_handler(commands=['counter'])
 @safe_handler
 def cmd_counter(m):
     bot.send_message(m.chat.id, f"📊 Всего публикаций: {load_counter():06}")
 
 
-@bot.message_handler(commands=['set_count'])
+@bot.message_handler(commands=['set_counter'])
 @safe_handler
 def cmd_reset(m):
     if m.from_user.id != OWNER_ID:
@@ -357,18 +331,16 @@ def all_text(m):
         markup.row(
             InlineKeyboardButton(
                 "🚫 Заблокировать", callback_data=f"block_user_reply:{reply_id}"),
+            InlineKeyboardButton(
+                "⚠️ Убрать имя", callback_data=f"remove_name_reply:{reply_id}")
         )
         bot.send_message(
             MODERATION_GROUP_ID,
             (
-                f"📨 <b>Запрос на модерацию ответа</b>\n\n"
-                f"📝 <b>Пост №{num:06}:</b>\n"
-                f"<blockquote>{entry.get('text', '')}</blockquote>\n\n"
-                f"✉️ <b>Ответ пользователя:</b>\n"
-                f"<blockquote>{m.text}</blockquote>\n\n"
-                f"👤 <b>Автор ответа:</b> {author_mention} (ID: <code>{u.id}</code>)"
-
-
+                f"📨 <b>Запрос модерации ответа</b>\n\n"
+                f"Ответ на пост №{num:06}:\n{entry.get('text', '')}\n\n"
+                f"✉️ Текст ответа:\n{m.text}\n\n"
+                f"👤 Автор ответа: {author_mention} (ID: <code>{u.id}</code>)"
             ),
             parse_mode='HTML',
             disable_web_page_preview=True,
@@ -406,11 +378,9 @@ def all_text(m):
     bot.send_message(
         MODERATION_GROUP_ID,
         (
-            f"📬 <b>Запрос на модерацию поста</b>\n\n"
-            f"✉️ <b>Текст поста:</b>\n"
-            f"<blockquote>{m.text}</blockquote>\n\n"
-            f"👤 <b>Автор поста:</b> {author_mention} (ID: <code>{u.id}</code>)"
-
+            f"📬 <b>Запрос модерации поста</b>\n\n"
+            f"✉️ Текст поста:\n{m.text}\n\n"
+            f"👤 Автор поста: {author_mention} (ID: <code>{u.id}</code>)"
         ),
         parse_mode='HTML',
         disable_web_page_preview=True,
@@ -462,12 +432,12 @@ def handle_media(m: Message):
     # Отправляем превью в группу модерации
     if m.content_type == 'photo':
         bot.send_photo(MODERATION_GROUP_ID, file.file_id,
-                       caption=(f"🖼 <b>Модерация фото</b>\n\n<blockquote>{m.caption or ''}</blockquote>\n\n"
+                       caption=(f"🖼 <b>Модерация фото</b>\n\n{m.caption or ''}\n\n"
                                 f"👤 Автор: {author_mention} (ID: <code>{u.id}</code>)"),
                        parse_mode='HTML', reply_markup=markup)
     else:
         bot.send_video(MODERATION_GROUP_ID, file.file_id,
-                       caption=(f"📹 <b>Модерация видео</b>\n\n<blockquote>{m.caption or ''}</blockquote>\n\n"
+                       caption=(f"📹 <b>Модерация видео</b>\n\n{m.caption or ''}\n\n"
                                 f"👤 Автор: {author_mention} (ID: <code>{u.id}</code>)"),
                        parse_mode='HTML', reply_markup=markup)
 
@@ -540,25 +510,16 @@ def on_moderate(c):
         else:
             status = f"Отклонил: {mod_mention}"
 
-        # bot.edit_message_text(
-        #     chat_id=c.message.chat.id,
-        #     message_id=c.message.message_id,
-        #     text=(f"📬 <b>Запрос модерации поста</b>\n\n"
-        #           f"✉️ Текст поста:\n{data['text']}\n\n"
-        #           f"👤 Автор поста: {author_mention} (ID: <code>{u_id}</code>)\n\n"
-        #           f"{status}"),
-        #     parse_mode='HTML',
-        #     disable_web_page_preview=True
-        # )
-        bot.delete_message(chat_id=c.message.chat.id,
-                           message_id=c.message.message_id)
-        bot.send_message(OWNER_ID,
-                         f"📬 <b>Запрос модерации поста</b>\n\n"
-                         f"✉️ Текст поста:\n{data['text']}\n\n"
-                         f"👤 Автор поста: {author_mention} (ID: <code>{u_id}</code>)\n\n"
-                         f"{status}",
-                         parse_mode='HTML',
-                         disable_web_page_preview=True)
+        bot.edit_message_text(
+            chat_id=c.message.chat.id,
+            message_id=c.message.message_id,
+            text=(f"📬 <b>Запрос модерации поста</b>\n\n"
+                  f"✉️ Текст поста:\n{data['text']}\n\n"
+                  f"👤 Автор поста: {author_mention} (ID: <code>{u_id}</code>)\n\n"
+                  f"{status}"),
+            parse_mode='HTML',
+            disable_web_page_preview=True
+        )
         return bot.answer_callback_query(c.id, "")
 
     # --- Модерация ответа ---
@@ -604,25 +565,17 @@ def on_moderate(c):
         else:
             status = f"Отклонил: {mod_mention}"
 
-        # bot.edit_message_text(
-        #     chat_id=c.message.chat.id,
-        #     message_id=c.message.message_id,
-        #     text=(f"📨 <b>Запрос модерации ответа</b>\n\n"
-        #           f"Ответ на пост №{entry['number']:06}:\n{entry['text']}\n\n"
-        #           f"✉️ Текст ответа:\n{data['text']}\n\n"
-        #           f"👤 Автор ответа: {author_mention} (ID: <code>{u_id}</code>)\n\n"
-        #           f"{status}"),
-        #     parse_mode='HTML',
-        #     disable_web_page_preview=True
-        # )
-        bot.delete_message(chat_id=c.message.chat.id,
-                           message_id=c.message.message_id)
-        bot.send_message(OWNER_ID,
-                         f"📨 <b>Запрос модерации ответа</b>\n\n"
-                         f"Ответ на пост №{entry['number']:06}:\n{entry['text']}\n\n"
-                         f"✉️ Текст ответа:\n{data['text']}\n\n"
-                         f"👤 Автор ответа: {author_mention} (ID: <code>{u_id}</code>)\n\n"
-                         f"{status}", parse_mode='HTML', disable_web_page_preview=True)
+        bot.edit_message_text(
+            chat_id=c.message.chat.id,
+            message_id=c.message.message_id,
+            text=(f"📨 <b>Запрос модерации ответа</b>\n\n"
+                  f"Ответ на пост №{entry['number']:06}:\n{entry['text']}\n\n"
+                  f"✉️ Текст ответа:\n{data['text']}\n\n"
+                  f"👤 Автор ответа: {author_mention} (ID: <code>{u_id}</code>)\n\n"
+                  f"{status}"),
+            parse_mode='HTML',
+            disable_web_page_preview=True
+        )
         return bot.answer_callback_query(c.id, "")
 
     # --- Модерация медиа ---
@@ -667,27 +620,19 @@ def on_moderate(c):
     else:
         status = f"Отклонил: {mod_mention}"
 
-    # bot.edit_message_caption(
-    #     chat_id=c.message.chat.id,
-    #     message_id=c.message.message_id,
-    #     caption=(f"🖼 <b>Запрос модерации медиа</b>\n\n"
-    #              f"👤 ID: <code>{u_id}</code>\n\n"
-    #              f"{status}"),
-    #     parse_mode='HTML'
-    # )
-    bot.delete_message(chat_id=c.message.chat.id,
-                       message_id=c.message.message_id)
-    bot.send_message(OWNER_ID,
-                     f"🖼 <b>Запрос модерации медиа</b>\n\n"
-                     f"👤 ID: <code>{u_id}</code>\n\n"
-                     f"{status}",
-                     parse_mode='HTML')
+    bot.edit_message_caption(
+        chat_id=c.message.chat.id,
+        message_id=c.message.message_id,
+        caption=(f"🖼 <b>Запрос модерации медиа</b>\n\n"
+                 f"👤 ID: <code>{u_id}</code>\n\n"
+                 f"{status}"),
+        parse_mode='HTML'
+    )
 
     bot.answer_callback_query(c.id, "")
 
-
 bot.infinity_polling(
-    timeout=15,              # ждём ответа от сервера до 15 секунд
-    long_polling_timeout=10,  # сервер держит соединение до 10 секунд
-    skip_pending=True
+  timeout=15,              # ждём ответа от сервера до 15 секунд
+  long_polling_timeout=10,  # сервер держит соединение до 10 секунд
+  skip_pending=True
 )
