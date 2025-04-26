@@ -1,6 +1,6 @@
 import logging
 from config import BOT_TOKEN, CHANNEL_ID, ADMINS, OWNER_ID, MODERATION_GROUP_ID, ARCHIVE
-from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, Message, InputMediaPhoto, InputMediaVideo
+from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, Message
 import telebot
 import uuid
 import json
@@ -87,7 +87,7 @@ def handle_user_command(message):
             link = f"tg://user?id={user.id}"
 
         hyperlink = f'<a href="{link}">{name}</a>'
-        bot.reply_to(message, f'Профиль: {hyperlink}')
+        bot.reply_to(message, f'Профиль: {hyperlink}', parse_mode="HTML")
 
     except Exception as e:
         bot.reply_to(message, f"Ошибка: {e}")
@@ -103,8 +103,8 @@ def save_media_json(message, item, user_id, cap, n, type):
 
     # Загружаем media.json
     try:
-        with open('media.json', "r", encoding="utf-8") as f:
-            media_data = json.load(f)
+        media_data = load_json(PENDING_MEDIA)
+
     except (FileNotFoundError, json.JSONDecodeError):
         media_data = {}
 
@@ -118,8 +118,7 @@ def save_media_json(message, item, user_id, cap, n, type):
     }
 
     # Записываем обратно в media.json только если есть изменения
-    with open('media.json', "w", encoding="utf-8") as f:
-        json.dump(media_data, f, ensure_ascii=False, indent=2)
+    save_json(PENDING_MEDIA, media_data)
     pending_media.update(media_data)
 
 
@@ -377,7 +376,7 @@ def all_text(m):
                 reply_markup=markup
             )
             return bot.send_message(m.chat.id, "🔄 Ответ отправлен на модерацию.")
-        elif entry_media:
+        elif entry_media:   
             if entry_media.get('type') == 'photo':
                 bot.send_photo(
                     MODERATION_GROUP_ID,
@@ -493,7 +492,7 @@ def handle_media(m: Message):
     )
 
 
-    orig = user_reply_flow[u.id]
+    orig = user_reply_flow[str(u.id)]
     entry = pending_media.get(orig)
     
     markup2 = InlineKeyboardMarkup()
@@ -763,26 +762,39 @@ def on_moderate(c):
         if ctype == 'photo':
             bot.send_photo(CHANNEL_ID, file_id,
                            caption=caption, parse_mode='HTML')
+            data = pending_media.pop(item)          # ваш словарь media
+            data['message_id'] = sent.message_id    # сохраняем, чтобы потом reply_to
+            pending_media[item] = data
+            save_json(PENDING_MEDIA, pending_media)
         else:
             bot.send_video(CHANNEL_ID, file_id,
                            caption=caption, parse_mode='HTML')
+            data = pending_media.pop(item)          # ваш словарь media
+            data['message_id'] = sent.message_id    # сохраняем, чтобы потом reply_to
+            pending_media[item] = data
+            save_json(PENDING_MEDIA, pending_media)
         num = load_counter() + 1
         save_counter(num)
         status = f"Одобрил: {mod_mention}"
         save_media_json(c.message, item, u_id, cap, load_counter(), ctype)
+        entry_media = pending_media.get(item)
+        entry_media['message_id'] = sent.message_id
+        save_json(PENDING_MEDIA, pending_media)
 
     elif action == 'approve_reply_photo':
-
+        data = pending_posts.pop(item, None)
+        orig_msg_id = data.get('message_id')
         caption = f"№{load_counter()+1:06}\n{cap}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>"
-        sent = bot.sent_photo(CHANNEL_ID, item, caption=caption, reply_to_message_id=id)
+        sent = bot.send_photo(CHANNEL_ID, data[file_id], caption=caption, reply_to_message_id=orig_msg_id)
         entry_media = pending_media.get(item)
         entry_media['message_id'] = sent.message_id
         save_json(PENDING_MEDIA, pending_media)
 
     elif action == 'approve_reply_video':
-
+        data = pending_posts.pop(item, None)
+        orig_msg_id = data.get('message_id')
         caption = f"№{load_counter()+1:06}\n{cap}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>"
-        sent = bot.sent_video(CHANNEL_ID, item, caption=caption, reply_to_message_id=id)
+        sent = bot.send_video(CHANNEL_ID, data[file_id], caption=caption, reply_to_message_id=orig_msg_id)
         entry_media = pending_media.get(item)
         entry_media['message_id'] = sent.message_id
         save_json(PENDING_MEDIA, pending_media)
