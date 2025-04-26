@@ -511,7 +511,7 @@ def handle_media(m: Message):
     markup3 = InlineKeyboardMarkup()
     markup3.row(
         InlineKeyboardButton("✅ Одобрить",
-                             callback_data=f"approve_reply_video:{media_id}"),a
+                             callback_data=f"approve_reply_video:{media_id}"),
         InlineKeyboardButton("❌ Отклонить",
                              callback_data=f"reject_media:{media_id}")
     )
