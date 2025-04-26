@@ -492,7 +492,7 @@ def handle_media(m: Message):
     )
 
 
-    orig = user_reply_flow[u.id]
+    orig = user_reply_flow.get(str(u.id))
     entry = pending_media.get(orig)
     
     markup2 = InlineKeyboardMarkup()
@@ -511,7 +511,7 @@ def handle_media(m: Message):
     markup3 = InlineKeyboardMarkup()
     markup3.row(
         InlineKeyboardButton("✅ Одобрить",
-                             callback_data=f"approve_reply_video:{media_id}"),
+                             callback_data=f"approve_reply_video:{media_id}"),a
         InlineKeyboardButton("❌ Отклонить",
                              callback_data=f"reject_media:{media_id}")
     )
@@ -656,7 +656,7 @@ def on_moderate(c):
         # )
         bot.delete_message(chat_id=c.message.chat.id,
                            message_id=c.message.message_id)
-        bot.send_message(ARCHIVE,
+        bot.send_message(OWNER_ID,
                          f"📬 <b>Запрос модерации поста</b>\n\n"
                          f"✉️ Текст поста:\n{data['text']}\n\n"
                          f"👤 Автор поста: {author_mention} (ID: <code>{u_id}</code>)\n\n"
@@ -721,7 +721,7 @@ def on_moderate(c):
         # )
         bot.delete_message(chat_id=c.message.chat.id,
                            message_id=c.message.message_id)
-        bot.send_message(ARCHIVE,
+        bot.send_message(OWNER_ID,
                          f"📨 <b>Запрос модерации ответа</b>\n\n"
                          f"Ответ на пост №{entry['number']:06}:\n{entry['text']}\n\n"
                          f"✉️ Текст ответа:\n{data['text']}\n\n"
