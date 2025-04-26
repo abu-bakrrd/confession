@@ -268,6 +268,25 @@ def cmd_unblock(m):
     else:
         bot.reply_to(m, "⚠️ Этот пользователь не был заблокирован.")
 
+@bot.message_handler(commands=['block'])
+@safe_handler
+def cmd_block(m):
+    if not is_admin(m.from_user.id):
+        return bot.reply_to(m, "❌ Только админ.")
+    parts = m.text.split()
+    if len(parts) != 2:
+        return bot.reply_to(m, "Использование: /block <user_id>")
+    try:
+        uid = int(parts[1])
+    except ValueError:
+        return bot.reply_to(m, "⚠️ Неверный формат ID.")
+
+    if uid in blocked_users:
+        bot.reply_to(m, "⚠️ Пользователь уже заблокирован.")
+    else:
+        blocked_users[uid] = True
+        save_blocked()
+        bot.reply_to(m, f"⛔ Пользователь {uid} заблокирован.")
 
 # @bot.message_handler(commands=['name'])
 # @safe_handler
