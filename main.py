@@ -50,12 +50,12 @@ BASE_DIR = os.path.join(os.getcwd(), 'data')
 os.makedirs(BASE_DIR, exist_ok=True)
 
 
-PENDING_POSTS = os.path.join(BASE_DIR, 'data/messages.json')
-APPROVED_POSTS = os.path.join(BASE_DIR, 'data/approved.json')
-PENDING_REPLIES = os.path.join(BASE_DIR, 'data/replies.json')
-COUNTER_FILE = os.path.join(BASE_DIR, 'data/counter.json')
-BLOCKED_FILE = os.path.join(BASE_DIR, 'data/blocked.json')
-PENDING_MEDIA = os.path.join(BASE_DIR, 'data/media.json')
+PENDING_POSTS = os.path.join(BASE_DIR, 'messages.json')
+APPROVED_POSTS = os.path.join(BASE_DIR, 'approved.json')
+PENDING_REPLIES = os.path.join(BASE_DIR, 'replies.json')
+COUNTER_FILE = os.path.join(BASE_DIR, 'counter.json')
+BLOCKED_FILE = os.path.join(BASE_DIR, 'blocked.json')
+PENDING_MEDIA = os.path.join(BASE_DIR, 'media.json')
 
 
 def save_json(path, data):
