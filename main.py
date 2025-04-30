@@ -41,24 +41,21 @@ def safe_handler(func):
             return func(*args, **kwargs)
         except Exception:
             logging.exception(f"Error in handler {func.__name__}")
-            # здесь можно уведомить администратора или просто проигнорировать
     return wrapper
 
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# Путь к папке данных внутри контейнера (Replit или другой хост)
 BASE_DIR = os.path.join(os.getcwd(), 'data')
 os.makedirs(BASE_DIR, exist_ok=True)
 
 
-PENDING_POSTS = os.path.join(BASE_DIR, 'messages.json')
-APPROVED_POSTS = os.path.join(BASE_DIR, 'approved.json')
-PENDING_REPLIES = os.path.join(BASE_DIR, 'replies.json')
-# USERS_FILE = os.path.join(BASE_DIR, 'users.json')
-COUNTER_FILE = os.path.join(BASE_DIR, 'counter.json')
-BLOCKED_FILE = os.path.join(BASE_DIR, 'blocked.json')
-PENDING_MEDIA = os.path.join(BASE_DIR, 'media.json')
+PENDING_POSTS = os.path.join(BASE_DIR, 'data/messages.json')
+APPROVED_POSTS = os.path.join(BASE_DIR, 'data/approved.json')
+PENDING_REPLIES = os.path.join(BASE_DIR, 'data/replies.json')
+COUNTER_FILE = os.path.join(BASE_DIR, 'data/counter.json')
+BLOCKED_FILE = os.path.join(BASE_DIR, 'data/blocked.json')
+PENDING_MEDIA = os.path.join(BASE_DIR, 'data/media.json')
 
 
 def save_json(path, data):
@@ -96,19 +93,16 @@ def handle_user_command(message):
 def save_media_json(message, item, user_id, cap, n, type):
     file_id = None
     if type == 'photo':
-        file_id = message.photo[-1].file_id  # Самое большое фото
+        file_id = message.photo[-1].file_id
     else:
         file_id = message.video.file_id
-    # user_id = str(message.from_user.id)  # ID пользователя
 
-    # Загружаем media.json
     try:
         media_data = load_json(PENDING_MEDIA)
 
     except (FileNotFoundError, json.JSONDecodeError):
         media_data = {}
 
-    # Сохраняем фото в словарь
     media_data[item] = {
         "type": type,
         "file_id": file_id,
@@ -117,7 +111,6 @@ def save_media_json(message, item, user_id, cap, n, type):
         "number": n
     }
 
-    # Записываем обратно в media.json только если есть изменения
     save_json(PENDING_MEDIA, media_data)
     pending_media.update(media_data)
 
@@ -131,8 +124,6 @@ def load_json(path):
     return json.loads(txt) if txt else {}
 
 
-# Загрузка данных
-# users = load_json(USERS_FILE)
 pending_posts = load_json(PENDING_POSTS)
 approved_posts = load_json(APPROVED_POSTS)
 pending_replies = load_json(PENDING_REPLIES)
@@ -156,10 +147,7 @@ def is_admin(uid):
     return uid in ADMINS or uid == OWNER_ID
 
 
-# waiting_for_name = set()
 user_reply_flow = {}
-
-# --- /start и глубокие ссылки ---
 
 
 @bot.message_handler(commands=['start'])
@@ -182,46 +170,16 @@ def cmd_start(m):
         elif entry2:
             if entry2['type'] == 'photo':
                 try:
-                    # Получаем файл по file_id
-                    file = bot.get_file(entry2['file_id'])
-
-                    # Загружаем файл с сервера Telegram
-                    # file_path = file.file_path  # Получаем путь к файлу
-                    # downloaded_file = bot.download_file(
-                    #     file_path)  # Скачиваем файл
-
-                    # # Сохраняем файл на диск
-                    # with open(f'{entry2["file_id"]}.jpg', 'wb') as f:
-                    #     f.write(downloaded_file)
-
-                    # print(
-                    #     f"Фото успешно загружено с file_id {entry2['file_id']}.")
                     bot.send_photo(entry2['user_id'],
                                    entry2['file_id'], caption=f"{entry2['cap']}\n\n💬Вы отвечаете на пост под номером №{entry2['number']:06}.\n\nНапишите сам ответ:")
 
                 except Exception as e:
-                    # print(f"Ошибка при получении фото: {e}")
                     pass
             else:
                 try:
-                    # Получаем файл по file_id
-                    file = bot.get_file(entry2['file_id'])
-
-                    # Загружаем файл с сервера Telegram
-                    # file_path = file.file_path  # Получаем путь к файлу
-                    # downloaded_file = bot.download_file(
-                    #     file_path)  # Скачиваем файл
-
-                    # # Сохраняем видео на диск
-                    # with open(f'{entry2["file_id"]}.mp4', 'wb') as f:
-                    #     f.write(downloaded_file)
-
-                    # print(
-                    #     f"Видео успешно загружено с file_id {entry2['file_id']}.")
-
                     bot.send_video(
                         entry2['user_id'],
-                        file,
+                        entry2['file_id'],
                         caption=(
                             f"{entry2['cap']}\n\n"
                             f"💬 Вы отвечаете на пост под номером №{entry2['number']:06}.\n\n"
@@ -230,7 +188,6 @@ def cmd_start(m):
                     )
 
                 except Exception as e:
-                    # print(f"Ошибка при получении видео: {e}")
                     pass
             user_reply_flow[uid] = orig
         else:
@@ -239,15 +196,6 @@ def cmd_start(m):
         return
     else:
         bot.send_message(m.chat.id, '👋 Привет! Добро пожаловать в анонимный\nбот!\n\nЗдесь ты можешь:\n 📝 Отправлять анонимные посты\n💬 Отвечать на чужие посты\n📷 Делиться фото и видео\n👀 Все проходит модерацию перед публикацией\n\nЧтобы начать просто отправь сообщение, фото или видео — и жди модерации!\n\n🚫 Не забывай: спам, оскорбления и нарушения правил — повод для блокировки.\n\nГотов? Тогда начинай!')
-
-    # if uid not in users:
-    #     bot.send_message(m.chat.id, "👋 Привет! Введите своё имя:")
-    #     waiting_for_name.add(uid)
-    # else:
-    #     bot.send_message(
-    #         m.chat.id, f"Привет, {users[uid]}! Отправьте анонимный пост.")
-
-# --- вспомогательные команды ---
 
 
 @bot.message_handler(commands=['id'])
@@ -294,13 +242,6 @@ def cmd_block(m):
         save_blocked()
         bot.reply_to(m, f"⛔ Пользователь {uid} заблокирован.")
 
-# @bot.message_handler(commands=['name'])
-# @safe_handler
-# def cmd_name(m):
-#     uid = str(m.from_user.id)
-#     waiting_for_name.add(uid)
-#     bot.send_message(m.chat.id, "✏️ Введите новое имя:")
-
 
 @bot.message_handler(commands=['count'])
 @safe_handler
@@ -320,8 +261,6 @@ def cmd_reset(m):
         bot.send_message(
             m.chat.chat_id, 'Использование: /set_counter <целое число>')
     bot.reply_to(m, f"🔄 Счётчик изменен на {mm[1]}.")
-
-# --- основной текстовый хэндлер ---
 
 
 @bot.message_handler(func=lambda m: True, content_types=['text'])
@@ -376,7 +315,7 @@ def all_text(m):
                 reply_markup=markup
             )
             return bot.send_message(m.chat.id, "🔄 Ответ отправлен на модерацию.")
-        elif entry_media:   
+        elif entry_media:
             if entry_media.get('type') == 'photo':
                 bot.send_photo(
                     MODERATION_GROUP_ID,
@@ -407,15 +346,6 @@ def all_text(m):
                     disable_web_page_preview=True,
                     reply_markup=markup
                 )
-
-                # if uid in waiting_for_name:
-    #     users[uid] = m.text.strip()
-    #     save_json(USERS_FILE, users)
-    #     waiting_for_name.remove(uid)
-    #     return bot.send_message(m.chat.id, f"✅ Ваше имя: {users[uid]}")
-
-    # if uid not in users:
-    #     return bot.send_message(m.chat.id, "❗ Сначала /start и введите имя.")
 
     post_id = str(uuid.uuid4())
     pending_posts[post_id] = {'text': m.text.strip(), 'from': uid}
@@ -450,26 +380,25 @@ def all_text(m):
     )
     bot.send_message(m.chat.id, "✅ Пост отправлен на модерацию.")
 
-# --- обработка медиа (фото/видео) ---
-
 
 @bot.message_handler(content_types=['photo', 'video'])
 def handle_media(m: Message):
     if m.chat.type != 'private':
         return
+    elif m.media_group_id:
+        bot.send_message(uid, 'Отпрваляйте не более одного медиа за раз.')
     uid = str(m.from_user.id)
     if uid in blocked_users:
         return bot.send_message(m.chat.id, "🚫 Вы заблокированы и не можете отправлять медиа.")
-    # if uid not in users:
-    #     return bot.send_message(m.chat.id, "❗ Сначала /start и введите имя.")
-
-    file = m.photo[-1] if m.content_type == 'photo' else m.video
-    if hasattr(file, 'file_size') and file.file_size > 400 * 1024 * 1024:
-        return bot.send_message(m.chat.id, "⚠️ Медиа превышает 400MB.")
+    file_id = None
+    if m.content_type == 'photo':
+        file_id = m.photo[-1].file_id
+    else:
+        file_id = m.video.file_id
 
     media_id = str(uuid.uuid4())
     pending_media[media_id] = {
-        'file_id': file.file_id,
+        'file_id': file_id,
         'type': m.content_type,
         'caption': getattr(m, 'caption', '') or '',
         'from': uid
@@ -491,10 +420,9 @@ def handle_media(m: Message):
 
     )
 
-
     orig = user_reply_flow.get(str(u.id))
     entry = pending_media.get(orig)
-    
+
     markup2 = InlineKeyboardMarkup()
     markup2.row(
         InlineKeyboardButton("✅ Одобрить",
@@ -521,81 +449,80 @@ def handle_media(m: Message):
 
     )
     if u.id in user_reply_flow:
-        if entry['type'] == 'photo':
+        if entry['type'] == 'photo' or entry['type'] == 'video':
             if m.content_type == 'photo':
                 file_id = m.photo[-1].file_id
                 link = f"https://t.me/conversation242/{entry['message_id']}"
                 bot.send_photo(MODERATION_GROUP_ID, file_id, caption=(
-                            f"📨 <b>Запрос на модерацию ответа на</b> <a href='{link}'>фото</a>\n\n"
-                            f"✉️ <b>Ответ пользователя:</b>\n"
-                            f"<blockquote>{m.caption}</blockquote>\n\n"
-                            f"👤 <b>Автор ответа:</b> {author_mention} (ID: <code>{u.id}</code>)"
-                        ), markup=markup2, parse_mode="HTML")
+                    f"📨 <b>Запрос на модерацию ответа на</b> <a href='{link}'>фото</a>\n\n"
+                    f"✉️ Текст фото: {entry['caption']}"
+                    f"✉️ <b>Ответ пользователя:</b>\n"
+                    f"<blockquote>{m.caption}</blockquote>\n\n"
+                    f"👤 <b>Автор ответа:</b> {author_mention} (ID: <code>{u.id}</code>)"
+                ), markup=markup2, parse_mode="HTML")
             else:
                 file_id = m.video.file_id
                 link = f"https://t.me/conversation242/{entry['message_id']}"
                 bot.send_video(MODERATION_GROUP_ID, file_id, caption=(
-                            f"📨 <b>Запрос на модерацию ответа на</b> <a href='{link}'>фото</a>\n\n"
-                            f"✉️ <b>Ответ пользователя:</b>\n"
-                            f"<blockquote>{m.caption}</blockquote>\n\n"
-                            f"👤 <b>Автор ответа:</b> {author_mention} (ID: <code>{u.id}</code>)"
-                        ), markup=markup3, parse_mode="HTML")
+                    f"📨 <b>Запрос на модерацию ответа на</b> <a href='{link}'>фото</a>\n\n"
+                    f"✉️ <b>Ответ пользователя:</b>\n"
+                    f"✉️ Текст видео: {entry['caption']}"
+                    f"<blockquote>{m.caption}</blockquote>\n\n"
+                    f"👤 <b>Автор ответа:</b> {author_mention} (ID: <code>{u.id}</code>)"
+                ), markup=markup3, parse_mode="HTML")
         else:
+            entry2 = approved_posts.get(orig)
             if m.content_type == 'photo':
                 file_id = m.photo[-1].file_id
-                link = f"https://t.me/conversation242/{entry['message_id']}"
                 bot.send_photo(MODERATION_GROUP_ID, file_id, caption=(
-                            f"📨 <b>Запрос на модерацию ответа на</b> <a href='{link}'>фото</a>\n\n"
-                            f"✉️ <b>Ответ пользователя:</b>\n"
-                            f"<blockquote>{m.caption}</blockquote>\n\n"
-                            f"👤 <b>Автор ответа:</b> {author_mention} (ID: <code>{u.id}</code>)"
-                        ), markup=markup2, parse_mode="HTML")
+                    f"📨 <b>Запрос на модерацию ответа на пост:</b>\n\n"
+                    f"<blockquote>{entry2['text']}</blockquote>\n\n"
+                    f"✉️ <b>Ответ пользователя:</b>\n"
+                    f"<blockquote>{m.caption}</blockquote>\n\n"
+                    f"👤 <b>Автор ответа:</b> {author_mention} (ID: <code>{u.id}</code>)"
+                ), markup=markup2, parse_mode="HTML")
             else:
                 file_id = m.video.file_id
                 link = f"https://t.me/conversation242/{entry['message_id']}"
                 bot.send_video(MODERATION_GROUP_ID, file_id, caption=(
-                            f"📨 <b>Запрос на модерацию ответа на</b> <a href='{link}'>фото</a>\n\n"
-                            f"✉️ <b>Ответ пользователя:</b>\n"
-                            f"<blockquote>{m.caption}</blockquote>\n\n"
-                            f"👤 <b>Автор ответа:</b> {author_mention} (ID: <code>{u.id}</code>)"
-                        ), markup=markup3, parse_mode="HTML")
+                    f"📨 <b>Запрос на модерацию ответа на</b> <a href='{link}'>фото</a>\n\n"
+                    f"✉️ <b>Ответ пользователя:</b>\n"
+                    f"<blockquote>{m.caption}</blockquote>\n\n"
+                    f"👤 <b>Автор ответа:</b> {author_mention} (ID: <code>{u.id}</code>)"
+                ), markup=markup3, parse_mode="HTML")
 
     else:
-        # Отправляем превью в группу модерации
-        sent = None
         if m.content_type == 'photo':
-            sent = bot.send_photo(MODERATION_GROUP_ID, file.file_id,
+            bot.send_photo(MODERATION_GROUP_ID, file_id,
                            caption=(f"🖼 <b>Модерация фото</b>\n\n<blockquote>{m.caption or ''}</blockquote>\n\n"
                                     f"👤 Автор: {author_mention} (ID: <code>{u.id}</code>)"),
                            parse_mode='HTML', reply_markup=markup)
         else:
-            sent = bot.send_video(MODERATION_GROUP_ID, file.file_id,
+            bot.send_video(MODERATION_GROUP_ID, file_id,
                            caption=(f"📹 <b>Модерация видео</b>\n\n<blockquote>{m.caption or ''}</blockquote>\n\n"
                                     f"👤 Автор: {author_mention} (ID: <code>{u.id}</code>)"),
                            parse_mode='HTML', reply_markup=markup)
-    entry['message_id'] = sent.message_id
-    save_json(PENDING_MEDIA, pending_media)
     bot.send_message(m.chat.id, "📤 Ваше медиа отправлено на модерацию.")
-
-# --- обработка всех callback’ов модерации ---
 
 
 @bot.callback_query_handler(func=lambda c: c.data.split(':')[0] in (
     'approve_post', 'reject_post', 'approve_reply', 'reject_reply',
-    'block_user_post', 'remove_name_post',
-    'block_user_reply', 'remove_name_reply',
-    'approve_media', 'reject_media', 'block_user_media', 'remove_name_media', 'approve_reply_photo', 'approve_reply_video'
+    'block_user_post',
+    'block_user_reply',
+    'approve_media', 'reject_media', 'block_user_media', 'approve_reply_photo', 'approve_reply_video'
 ))
 def on_moderate(c):
-    action, item, *id= c.data.split(':')
+    action, item = c.data.split(':')
     mod = c.from_user
     mod_mention = f'<a href="tg://user?id={mod.id}">{mod.first_name}</a>'
 
     # --- Модерация поста ---
-    if action in ('approve_post', 'reject_post', 'block_user_post', 'remove_name_post'):
+    if action in ('approve_post', 'reject_post', 'block_user_post'):
         data = pending_posts.pop(item, None)
         save_json(PENDING_POSTS, pending_posts)
         if not data:
+            bot.delete_message(chat_id=c.message.chat.id,
+                       message_id=c.message.message_id)
             return bot.answer_callback_query(c.id, "⚠️ Уже обработан.")
 
         u_id = data['from']
@@ -606,23 +533,6 @@ def on_moderate(c):
             blocked_users[u_id] = True
             save_blocked()
             status = f"🚫 Заблокирован: {mod_mention}"
-        elif action == 'remove_name_post':
-            sent = bot.send_message(
-                CHANNEL_ID,
-                f"№{load_counter()+1:06}:\n{data['text']}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>",
-                parse_mode='HTML',
-                disable_web_page_preview=True
-            )
-            num = load_counter() + 1
-            save_counter(num)
-            approved_posts[item] = {
-                'text': data['text'],
-                'from': u_id,
-                'number': num,
-                'channel_message_id': sent.message_id
-            }
-            save_json(APPROVED_POSTS, approved_posts)
-            status = f"⚠️ Опубликовано без имени: {mod_mention}"
         elif action == 'approve_post':
             sent = bot.send_message(
                 CHANNEL_ID,
@@ -637,26 +547,16 @@ def on_moderate(c):
                 'text': data['text'],
                 'from': u_id,
                 'number': num,
-                'channel_message_id': sent.message_id
+                'message_id': sent.message_id
             }
             save_json(APPROVED_POSTS, approved_posts)
             status = f"Одобрил: {mod_mention}"
         else:
             status = f"Отклонил: {mod_mention}"
 
-        # bot.edit_message_text(
-        #     chat_id=c.message.chat.id,
-        #     message_id=c.message.message_id,
-        #     text=(f"📬 <b>Запрос модерации поста</b>\n\n"
-        #           f"✉️ Текст поста:\n{data['text']}\n\n"
-        #           f"👤 Автор поста: {author_mention} (ID: <code>{u_id}</code>)\n\n"
-        #           f"{status}"),
-        #     parse_mode='HTML',
-        #     disable_web_page_preview=True
-        # )
         bot.delete_message(chat_id=c.message.chat.id,
                            message_id=c.message.message_id)
-        bot.send_message(OWNER_ID,
+        bot.send_message(ARCHIVE,
                          f"📬 <b>Запрос модерации поста</b>\n\n"
                          f"✉️ Текст поста:\n{data['text']}\n\n"
                          f"👤 Автор поста: {author_mention} (ID: <code>{u_id}</code>)\n\n"
@@ -666,10 +566,12 @@ def on_moderate(c):
         return bot.answer_callback_query(c.id, "")
 
     # --- Модерация ответа ---
-    if action in ('approve_reply', 'reject_reply', 'block_user_reply', 'remove_name_reply'):
+    if action in ('approve_reply', 'reject_reply', 'block_user_reply'):
         data = pending_replies.pop(item, None)
         save_json(PENDING_REPLIES, pending_replies)
         if not data:
+            bot.delete_message(chat_id=c.message.chat.id,
+                    message_id=c.message.message_id)
             return bot.answer_callback_query(c.id, "⚠️ Уже обработан.")
 
         orig = data['orig']
@@ -682,58 +584,42 @@ def on_moderate(c):
             blocked_users[u_id] = True
             save_blocked()
             status = f"🚫 Заблокирован: {mod_mention}"
-        # elif action == 'remove_name_reply':
-        #     bot.send_message(
-        #         CHANNEL_ID,
-        #         f"№{load_counter()+1:06}:\n{data['text']}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{orig}\">Ответить</a>",
-        #         parse_mode='HTML',
-        #         disable_web_page_preview=True,
-        #         reply_to_message_id=entry['channel_message_id']
-        #     )
-        #     num = load_counter() + 1
-        #     save_counter(num)
-        #     status = f"⚠️ Опубликован без имени: {mod_mention}"
         elif action == 'approve_reply':
-            bot.send_message(
+            sent_repyl = bot.send_message(
                 CHANNEL_ID,
                 f"№{load_counter()+1:06}:\n{data['text']}\n\n"
                 f"<a href=\"https://t.me/{bot.get_me().username}?start=reply_{orig}\">Ответить</a>",
                 parse_mode='HTML',
                 disable_web_page_preview=True,
-                reply_to_message_id=entry['channel_message_id']
+                reply_to_message_id=entry['message_id']
             )
             num = load_counter() + 1
+            approved_posts[item] = {
+                'text': data['text'],
+                'from': u_id,
+                'number': num,
+                'message_id': sent_repyl.message_id
+            }
+            save_json(APPROVED_POSTS, approved_posts)
             save_counter(num)
             status = f"Одобрил: {mod_mention}"
         else:
             status = f"Отклонил: {mod_mention}"
-
-        # bot.edit_message_text(
-        #     chat_id=c.message.chat.id,
-        #     message_id=c.message.message_id,
-        #     text=(f"📨 <b>Запрос модерации ответа</b>\n\n"
-        #           f"Ответ на пост №{entry['number']:06}:\n{entry['text']}\n\n"
-        #           f"✉️ Текст ответа:\n{data['text']}\n\n"
-        #           f"👤 Автор ответа: {author_mention} (ID: <code>{u_id}</code>)\n\n"
-        #           f"{status}"),
-        #     parse_mode='HTML',
-        #     disable_web_page_preview=True
-        # )
         bot.delete_message(chat_id=c.message.chat.id,
                            message_id=c.message.message_id)
-        bot.send_message(OWNER_ID,
+        bot.send_message(ARCHIVE,
                          f"📨 <b>Запрос модерации ответа</b>\n\n"
                          f"Ответ на пост №{entry['number']:06}:\n{entry['text']}\n\n"
                          f"✉️ Текст ответа:\n{data['text']}\n\n"
                          f"👤 Автор ответа: {author_mention} (ID: <code>{u_id}</code>)\n\n"
                          f"{status}", parse_mode='HTML', disable_web_page_preview=True)
         return bot.answer_callback_query(c.id, "")
-    
 
-    # --- Модерация медиа ---
     data = pending_media.pop(item, None)
     save_json(PENDING_MEDIA, pending_media)
     if not data:
+        bot.delete_message(chat_id=c.message.chat.id,
+                       message_id=c.message.message_id)
         return bot.answer_callback_query(c.id, "⚠️ Уже обработан.")
 
     u_id = data['from']
@@ -745,71 +631,51 @@ def on_moderate(c):
         blocked_users[u_id] = True
         save_blocked()
         status = f"🚫 Заблокирован: {mod_mention}"
-    # elif action == 'remove_name_media':
-    #     caption = f"№{load_counter()+1:06}\n{cap}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>"
-    #     if ctype == 'photo':
-    #         bot.send_photo(CHANNEL_ID, file_id,
-    #                        caption=caption, parse_mode='HTML')
-    #     else:
-    #         bot.send_video(CHANNEL_ID, file_id,
-    #                        caption=caption, parse_mode='HTML')
-    #     num = load_counter() + 1
-    #     save_counter(num)
-    #     status = f"⚠️ Опубликовано без имени: {mod_mention}"
-    #     save_media_json(c.message, item, u_id, cap, load_counter(), ctype)
     elif action == 'approve_media':
         caption = f"№{load_counter()+1:06}\n{cap}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>"
         if ctype == 'photo':
             bot.send_photo(CHANNEL_ID, file_id,
                            caption=caption, parse_mode='HTML')
-            data = pending_media.pop(item)          # ваш словарь media
-            data['message_id'] = sent.message_id    # сохраняем, чтобы потом reply_to
-            pending_media[item] = data
-            save_json(PENDING_MEDIA, pending_media)
+            data = pending_media.pop(item)
         else:
             bot.send_video(CHANNEL_ID, file_id,
                            caption=caption, parse_mode='HTML')
-            data = pending_media.pop(item)          # ваш словарь media
-            data['message_id'] = sent.message_id    # сохраняем, чтобы потом reply_to
-            pending_media[item] = data
-            save_json(PENDING_MEDIA, pending_media)
+            data = pending_media.pop(item)
         num = load_counter() + 1
         save_counter(num)
         status = f"Одобрил: {mod_mention}"
         save_media_json(c.message, item, u_id, cap, load_counter(), ctype)
-        entry_media = pending_media.get(item)
-        entry_media['message_id'] = sent.message_id
+        data['message_id'] = sent.message_id
+        pending_media[item] = data
         save_json(PENDING_MEDIA, pending_media)
 
     elif action == 'approve_reply_photo':
         data = pending_posts.pop(item, None)
-        orig_msg_id = data.get('message_id')
+        replied_id = user_reply_flow[u_id]
+        replied_post = pending_media.get(replied_id) if pending_media.get(replied_id, False) else approved_posts.get(replied_id, None)
+        orig_msg_id = replied_post.get('message_id')
         caption = f"№{load_counter()+1:06}\n{cap}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>"
-        sent = bot.send_photo(CHANNEL_ID, data[file_id], caption=caption, reply_to_message_id=orig_msg_id)
-        entry_media = pending_media.get(item)
+        sent = bot.send_photo(
+            CHANNEL_ID, data[file_id], caption=caption, reply_to_message_id=orig_msg_id)
+        entry_media = pending_media.pop(item)
         entry_media['message_id'] = sent.message_id
         save_json(PENDING_MEDIA, pending_media)
 
     elif action == 'approve_reply_video':
         data = pending_posts.pop(item, None)
-        orig_msg_id = data.get('message_id')
+        replied_id = user_reply_flow[u_id]
+        replied_post = pending_media.get(replied_id) if pending_media.get(replied_id, False) else approved_posts.get(replied_id, None)
+        orig_msg_id = replied_post.get('message_id')
         caption = f"№{load_counter()+1:06}\n{cap}\n\n<a href=\"https://t.me/{bot.get_me().username}?start=reply_{item}\">Ответить</a>"
-        sent = bot.send_video(CHANNEL_ID, data[file_id], caption=caption, reply_to_message_id=orig_msg_id)
-        entry_media = pending_media.get(item)
+        sent = bot.send_video(
+            CHANNEL_ID, data[file_id], caption=caption, reply_to_message_id=orig_msg_id)
+        entry_media = pending_media.pop(item)
         entry_media['message_id'] = sent.message_id
         save_json(PENDING_MEDIA, pending_media)
 
     else:
         status = f"Отклонил: {mod_mention}"
 
-    # bot.edit_message_caption(
-    #     chat_id=c.message.chat.id,
-    #     message_id=c.message.message_id,
-    #     caption=(f"🖼 <b>Запрос модерации медиа</b>\n\n"
-    #              f"👤 ID: <code>{u_id}</code>\n\n"
-    #              f"{status}"),
-    #     parse_mode='HTML'
-    # )
     bot.delete_message(chat_id=c.message.chat.id,
                        message_id=c.message.message_id)
     bot.send_message(ARCHIVE,
@@ -822,7 +688,7 @@ def on_moderate(c):
 
 
 bot.infinity_polling(
-    timeout=15,              # ждём ответа от сервера до 15 секунд
-    long_polling_timeout=10,  # сервер держит соединение до 10 секунд
+    timeout=15,
+    long_polling_timeout=10,
     skip_pending=True
 )
