@@ -1,6 +1,10 @@
 import telebot
 import os
 from flask import Flask, request
+from telebot import types
+from rembg import remove
+from PIL import Image
+from io import BytesIO
 
 TOKEN = os.environ.get("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
