@@ -1,3 +1,5 @@
-pyTelegramBotAPI
-Flask
-
+pyTelegramBotAPI==4.15.4
+rembg==2.0.66
+Flask==3.0.3
+Pillow==10.3.0
+onnxruntime
